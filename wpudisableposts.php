@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: WPU disable posts
-Plugin URI: http://github.com/Darklg/WPUtilities
+Plugin URI: https://github.com/WordPressUtilities/wpudisableposts
 Description: Disable all posts
-Version: 0.9.0
+Version: 0.9.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
