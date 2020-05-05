@@ -3,9 +3,9 @@
 Plugin Name: WPU disable posts
 Plugin URI: https://github.com/WordPressUtilities/wpudisableposts
 Description: Disable all posts
-Version: 0.9.1
+Version: 0.10.0
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
@@ -133,8 +133,50 @@ add_filter('customize_nav_menu_available_item_types', function ($types) {
 
 add_action('admin_menu', function () {
     global $pagenow;
-    if($pagenow == 'edit.php' && empty($_GET)){
+    if ($pagenow == 'edit.php' && empty($_GET)) {
         wp_redirect(admin_url());
         die;
     }
 });
+
+/* ----------------------------------------------------------
+  Disable default post taxonomies
+---------------------------------------------------------- */
+
+class wpudisableposts_tax {
+    public function __construct() {
+        add_filter('plugins_loaded', array(&$this, 'plugins_loaded'));
+    }
+
+    public function plugins_loaded() {
+        if (!apply_filters('wpudisableposts__disable__taxonomies', true)) {
+            return;
+        }
+        $this->disable_taxonomies();
+        add_filter('nav_menu_meta_box_object', array(&$this, '_nav_menu_meta_box_object'), 10, 1);
+    }
+
+    public function disable_taxonomies() {
+        global $wp_taxonomies;
+        unregister_taxonomy_for_object_type('category', 'post');
+        unregister_taxonomy_for_object_type('post_tag', 'post');
+        if (isset($wp_taxonomies['category'])) {
+            unset($wp_taxonomies['category']);
+        }
+        if (isset($wp_taxonomies['post_tag'])) {
+            unset($wp_taxonomies['post_tag']);
+        }
+
+        unregister_taxonomy('category');
+        unregister_taxonomy('post_tag');
+    }
+
+    public function _nav_menu_meta_box_object($tax) {
+        if ($tax->name == 'category' || $tax->name == 'post_tag') {
+            return false;
+        }
+        return $tax;
+    }
+}
+
+$wpudisableposts_tax = new wpudisableposts_tax();
