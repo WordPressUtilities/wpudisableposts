@@ -3,7 +3,7 @@
 Plugin Name: WPU disable posts
 Plugin URI: https://github.com/WordPressUtilities/wpudisableposts
 Description: Disable all posts
-Version: 0.10.0
+Version: 0.10.1
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -133,7 +133,7 @@ add_filter('customize_nav_menu_available_item_types', function ($types) {
 
 add_action('admin_menu', function () {
     global $pagenow;
-    if ($pagenow == 'edit.php' && empty($_GET)) {
+    if (empty($_GET) && ($pagenow == 'edit.php' || $pagenow == 'post-new.php')) {
         wp_redirect(admin_url());
         die;
     }
