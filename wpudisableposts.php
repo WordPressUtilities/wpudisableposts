@@ -3,7 +3,7 @@
 Plugin Name: WPU disable posts
 Plugin URI: https://github.com/WordPressUtilities/wpudisableposts
 Description: Disable all posts
-Version: 0.10.1
+Version: 1.0.0
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -90,6 +90,7 @@ function wputh_disable_posts_disable_feed() {
 
 add_action('wp_dashboard_setup', 'wputh_disable_posts_remove_dashboard_widgets');
 function wputh_disable_posts_remove_dashboard_widgets() {
+    remove_meta_box('dashboard_activity', 'dashboard', 'normal');
     remove_meta_box('dashboard_quick_press', 'dashboard', 'side');
 }
 
@@ -180,3 +181,22 @@ class wpudisableposts_tax {
 }
 
 $wpudisableposts_tax = new wpudisableposts_tax();
+
+/* ----------------------------------------------------------
+  Destroy posts if still available
+---------------------------------------------------------- */
+
+add_action('wp_loaded', 'wpudisableposts_clean_wp_loaded');
+function wpudisableposts_clean_wp_loaded() {
+    if (false === ($wpudisableposts_clean = get_transient('wpudisableposts_clean')) ) {
+        $posts = get_posts(array(
+            'post_type' => 'post'
+        ));
+        foreach ($posts as $post) {
+            if ($post->post_type == 'post') {
+                wp_delete_post($post->ID);
+            }
+        }
+        set_transient('wpudisableposts_clean', $wpudisableposts_clean, 86400);
+    }
+}

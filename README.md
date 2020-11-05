@@ -1,6 +1,7 @@
 # WPU disable posts
 
 This plugin will disable all posts and default post taxonomies : category & post_tag.
+Posts will be deleted if some are found.
 
 Filter list :
 ---
