@@ -9,5 +9,11 @@ Filter list :
 ```php
 /* Re-Enable default taxonomies */
 add_filter('wpudisableposts__disable__taxonomies', '__return_false');
+
+/* Avoid destroying terms from default taxonomies */
+add_filter('wpudisableposts__destroy_terms', '__return_false');
+
+/* Avoid destroying old posts */
+add_filter('wpudisableposts__destroy_posts', '__return_false');
 ```
 

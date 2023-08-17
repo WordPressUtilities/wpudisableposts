@@ -2,12 +2,16 @@
 /*
 Plugin Name: WPU disable posts
 Plugin URI: https://github.com/WordPressUtilities/wpudisableposts
+Update URI: https://github.com/WordPressUtilities/wpudisableposts
 Description: Disable all posts
-Version: 1.0.0
+Version: 2.0.0
 Author: Darklg
 Author URI: https://darklg.me/
+Text Domain: wpudisableposts
+Requires at least: 6.2
+Requires PHP: 8.0
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 /* ----------------------------------------------------------
@@ -155,6 +159,7 @@ class wpudisableposts_tax {
         }
         $this->disable_taxonomies();
         add_filter('nav_menu_meta_box_object', array(&$this, '_nav_menu_meta_box_object'), 10, 1);
+        add_action('template_redirect', array(&$this, '_template_redirect'), 10, 1);
     }
 
     public function disable_taxonomies() {
@@ -178,6 +183,13 @@ class wpudisableposts_tax {
         }
         return $tax;
     }
+
+    public function _template_redirect() {
+        if (is_tag() || is_category()) {
+            wp_redirect(site_url());
+            die;
+        }
+    }
 }
 
 $wpudisableposts_tax = new wpudisableposts_tax();
@@ -188,8 +200,13 @@ $wpudisableposts_tax = new wpudisableposts_tax();
 
 add_action('wp_loaded', 'wpudisableposts_clean_wp_loaded');
 function wpudisableposts_clean_wp_loaded() {
-    if (false === ($wpudisableposts_clean = get_transient('wpudisableposts_clean')) ) {
+    if (!apply_filters('wpudisableposts__destroy_posts', true)) {
+        return;
+    }
+    /* Destroy posts */
+    if (get_transient('wpudisableposts_clean') === false) {
         $posts = get_posts(array(
+            'posts_per_page' => 20,
             'post_type' => 'post'
         ));
         foreach ($posts as $post) {
@@ -197,6 +214,34 @@ function wpudisableposts_clean_wp_loaded() {
                 wp_delete_post($post->ID);
             }
         }
-        set_transient('wpudisableposts_clean', $wpudisableposts_clean, 86400);
+        set_transient('wpudisableposts_clean', 1, 86400);
+    }
+}
+
+/* ----------------------------------------------------------
+  Destroy Tax if still available
+---------------------------------------------------------- */
+
+add_action('wp_loaded', 'wpudisableposts_clean_tax_wp_loaded');
+function wpudisableposts_clean_tax_wp_loaded() {
+    if (!apply_filters('wpudisableposts__disable__taxonomies', true)) {
+        return;
+    }
+    if (!apply_filters('wpudisableposts__destroy_terms', true)) {
+        return;
+    }
+    /* Destroy tax */
+    if (get_transient('wpudisableposts_clean_tax') === false) {
+        $terms_to_delete = array('post_tag', 'category');
+        foreach ($terms_to_delete as $term_to_delete) {
+            $terms = get_terms(array(
+                'taxonomy' => $term_to_delete,
+                'hide_empty' => false
+            ));
+            foreach ($terms as $term) {
+                wp_delete_term($term->term_id, $term_to_delete);
+            }
+        }
+        set_transient('wpudisableposts_clean_tax', 1, 86400);
     }
 }
